@@ -1,16 +1,19 @@
 /**
  * main.js
  * Titik masuk utama dan penyelaras untuk aplikasi.
- * Ia kini mengendalikan aliran kerja untuk mendapatkan dan memaparkan data berstruktur.
+ * Ia kini mengendalikan aliran kerja dari pengekstrakan hingga penyimpanan ke Google Sheet.
  */
 
 // Import fungsi dan elemen yang diperlukan dari modul lain.
+// NOTA: Anda perlu pastikan 'ui.js' dieksport elemen 'saveSheetButton' dan 'sheetSaveStatus'.
 import { elements, displayImagePreview, displayStructuredData, setLoadingState, resetUI } from './ui.js';
 import { getStructuredDataFromApi } from './apiService.js';
+import { saveDataToSheet } from './googleSheetService.js';
 
-// Pembolehubah untuk menyimpan data imej yang sedang diproses.
+// Pembolehubah untuk menyimpan data semasa.
 let currentImageBase64 = null;
 let currentMimeType = null;
+let currentStructuredData = null; // Menyimpan data JSON yang diekstrak.
 
 /**
  * Mengendalikan logik apabila pengguna memilih fail imej.
@@ -18,29 +21,25 @@ let currentMimeType = null;
  */
 function handleImageSelection(event) {
     const file = event.target.files[0];
-    if (!file) {
-        return; // Keluar jika tiada fail dipilih.
-    }
+    if (!file) return;
 
     // Panggil fungsi UI untuk memaparkan pratonton.
-    // Apabila selesai, ia akan memanggil balik dengan data base64 dan jenis mime imej.
     displayImagePreview(file, (base64, mimeType) => {
-        currentImageBase64 = base64; // Simpan data base64.
-        currentMimeType = mimeType;   // Simpan jenis mime.
+        currentImageBase64 = base64;
+        currentMimeType = mimeType;
         
-        // Tetapkan semula paparan data untuk imej baru.
+        // Tetapkan semula UI sepenuhnya untuk imej baru.
         resetUI();
         elements.imagePreview.src = `data:${mimeType};base64,${base64}`;
         elements.imagePreview.classList.remove('hidden');
         elements.uploadPlaceholder.classList.add('hidden');
         elements.extractButton.disabled = false;
         elements.resultsPlaceholder.textContent = 'Imej sedia untuk diekstrak.';
-
     });
 }
 
 /**
- * Menguruskan keseluruhan proses pengekstrakan teks, daripada panggilan API hingga kemas kini UI.
+ * Menguruskan proses pengekstrakan data dari imej.
  */
 async function handleExtractionProcess() {
     if (!currentImageBase64 || !currentMimeType) {
@@ -49,38 +48,65 @@ async function handleExtractionProcess() {
     }
 
     setLoadingState(true);
-    // Sembunyikan placeholder dan tunjukkan loader di tengah.
     elements.resultsPlaceholder.classList.add('hidden');
     elements.structuredDataContainer.classList.add('hidden');
-
+    elements.sheetSaveStatus.textContent = ''; // Kosongkan status simpan.
 
     try {
-        // Panggil fungsi perkhidmatan API untuk mendapatkan data berstruktur.
         const structuredData = await getStructuredDataFromApi(currentImageBase64, currentMimeType);
-        // Panggil fungsi UI untuk memaparkan data dalam borang.
+        currentStructuredData = structuredData; // Simpan data untuk digunakan oleh fungsi simpan.
         displayStructuredData(structuredData);
+        
+        // Paparkan butang simpan selepas berjaya ekstrak.
+        elements.saveSheetButton.classList.remove('hidden'); 
     } catch (error) {
-        // Jika berlaku ralat, paparkannya pada UI.
         console.error('Pengekstrakan gagal:', error);
         elements.resultsPlaceholder.classList.remove('hidden');
         elements.resultsPlaceholder.textContent = `Ralat: ${error.message}`;
     } finally {
-        // Pastikan pemuat disembunyikan selepas proses selesai.
         setLoadingState(false);
     }
 }
 
 /**
- * Memulakan aplikasi dengan menetapkan semua pendengar acara yang diperlukan.
+ * Menguruskan proses menghantar data ke Google Sheet.
+ */
+async function handleSaveProcess() {
+    if (!currentStructuredData) {
+        alert("Tiada data untuk disimpan. Sila ekstrak maklumat dahulu.");
+        return;
+    }
+
+    const saveButton = elements.saveSheetButton;
+    const statusDisplay = elements.sheetSaveStatus;
+
+    saveButton.disabled = true; // Lumpuhkan butang semasa proses menyimpan.
+    statusDisplay.textContent = 'Menyimpan ke Google Sheet...';
+    statusDisplay.classList.remove('text-green-500', 'text-red-500');
+
+    try {
+        await saveDataToSheet(currentStructuredData);
+        statusDisplay.textContent = 'Data berjaya disimpan!';
+        statusDisplay.classList.add('text-green-500');
+    } catch (error) {
+        console.error('Proses simpan gagal:', error);
+        statusDisplay.textContent = `Gagal menyimpan: ${error.message}`;
+        statusDisplay.classList.add('text-red-500');
+    } finally {
+        saveButton.disabled = false; // Aktifkan semula butang selepas selesai.
+    }
+}
+
+/**
+ * Memulakan aplikasi dengan menetapkan semua pendengar acara.
  */
 function initializeApp() {
     elements.uploadButton.addEventListener('click', () => elements.imageUpload.click());
     elements.imageUpload.addEventListener('change', handleImageSelection);
     elements.extractButton.addEventListener('click', handleExtractionProcess);
+    elements.saveSheetButton.addEventListener('click', handleSaveProcess); // Tambah pendengar acara baru.
 
-    // Tetapkan semula UI kepada keadaan asal apabila aplikasi dimuatkan.
     resetUI();
 }
 
-// Tambah pendengar acara untuk memastikan skrip hanya berjalan selepas semua HTML dimuatkan.
 document.addEventListener('DOMContentLoaded', initializeApp);
