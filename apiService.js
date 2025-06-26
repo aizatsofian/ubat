@@ -14,10 +14,11 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-
 /**
  * Memanggil Gemini API untuk mengekstrak teks daripada imej yang disediakan.
  * @param {string} imageBase64 - Rentetan base64 bagi imej untuk diproses.
+ * @param {string} mimeType - Jenis MIME bagi imej (cth., 'image/jpeg' atau 'image/png').
  * @returns {Promise<string>} - Janji yang selesai dengan teks yang diekstrak.
  * @throws {Error} - Melontarkan ralat jika panggilan API gagal atau jika tiada teks ditemui.
  */
-export async function getTextFromApi(imageBase64) {
+export async function getTextFromApi(imageBase64, mimeType) { // <- DIKEMASKINI: Tambah 'mimeType' sebagai argumen
     // Semakan untuk memastikan pengguna telah memasukkan kunci API mereka.
     if (USER_API_KEY === "PASTE_YOUR_API_KEY_HERE" || !USER_API_KEY) {
         throw new Error("Sila masukkan kunci API anda di dalam fail apiService.js.");
@@ -32,7 +33,7 @@ export async function getTextFromApi(imageBase64) {
                 { text: prompt },
                 {
                     inlineData: {
-                        mimeType: mimeType, // <- Guna MIME jenis sebenar
+                        mimeType: mimeType, // <- DIKEMASKINI: Guna argumen 'mimeType' yang diterima
                         data: imageBase64
                     }
                 }
