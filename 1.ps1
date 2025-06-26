@@ -6,6 +6,7 @@ $files = @(
     "ui.js",
     "main.js",
     "apiservice.js"
+    "googleSheetService.js"
 )
 
 # Nama fail output

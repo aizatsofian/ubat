@@ -1,53 +1,50 @@
 /**
  * googleSheetService.js
- * Modul ini bertanggungjawab untuk menghantar data ke Google Apps Script Web App.
+ * Modul ini kini menghantar data ke backend Google Apps Script yang sama.
  */
 
-// URL Aplikasi Web yang anda dapat selepas menerbitkan Google Apps Script.
+// URL Aplikasi Web yang sama digunakan untuk semua tindakan.
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyiSRpAF87Gj6Q0tRLHzcrJA7lBdTb8WyWdeTb23rYR9at3KiahrdgZHrCxLk-hfLc/exec";
 
 /**
- * Menghantar objek data yang telah diekstrak ke Google Sheet melalui Google Apps Script.
- * @param {Object} data - Objek JavaScript yang mengandungi maklumat (nama, no_kp, dll.).
+ * Menghantar objek data untuk disimpan melalui backend Google Apps Script.
+ * @param {Object} dataToSave - Objek JavaScript yang mengandungi maklumat.
  * @returns {Promise<Object>} - Janji yang selesai dengan respons dari skrip.
- * @throws {Error} - Melontarkan ralat jika penghantaran gagal.
  */
-export async function saveDataToSheet(data) {
-    if (!data) {
-        throw new Error("Tiada data untuk disimpan.");
+export async function saveDataToSheet(dataToSave) {
+  if (!dataToSave) {
+    throw new Error("Tiada data untuk disimpan.");
+  }
+
+  // Bina payload untuk dihantar ke Apps Script.
+  const payload = {
+    action: 'save', // Beritahu backend kita mahu simpan data.
+    data: dataToSave
+  };
+
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ralat rangkaian: ${response.status} ${response.statusText}`);
     }
 
-    try {
-        // Guna fetch() untuk membuat permintaan POST ke URL Aplikasi Web anda.
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            // Walaupun Apps Script boleh mengendalikan permintaan tanpa header ini, 
-            // adalah amalan baik untuk menghantar data sebagai teks biasa. 
-            // Skrip akan mem-parse-nya.
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-            },
-            body: JSON.stringify(data) // Tukar objek data kepada rentetan JSON.
-        });
+    const result = await response.json();
 
-        if (!response.ok) {
-            // Urus ralat rangkaian atau pelayan.
-            throw new Error(`Ralat rangkaian: ${response.status} ${response.statusText}`);
-        }
-
-        // Dapatkan respons dari Apps Script.
-        const result = await response.json();
-
-        // Semak jika skrip itu sendiri melaporkan ralat.
-        if (result.status === 'error') {
-            throw new Error(`Ralat dari Google Sheet: ${result.message}`);
-        }
-
-        return result; // Pulangkan objek kejayaan (cth., {status: "success", ...})
-
-    } catch (error) {
-        console.error("Gagal menghantar data ke Google Sheet:", error);
-        // Lontarkan semula ralat supaya fail lain boleh menguruskannya.
-        throw error;
+    if (result.status === 'error') {
+      throw new Error(`Ralat dari Google Sheet: ${result.message}`);
     }
+
+    return result;
+
+  } catch (error) {
+    console.error("Gagal menghantar data ke Google Sheet:", error);
+    throw error;
+  }
 }
