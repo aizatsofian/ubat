@@ -32,7 +32,7 @@ export async function getTextFromApi(imageBase64) {
                 { text: prompt },
                 {
                     inlineData: {
-                        mimeType: "image/jpeg",
+                        mimeType: mimeType, // <- Guna MIME jenis sebenar
                         data: imageBase64
                     }
                 }

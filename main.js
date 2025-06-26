@@ -11,22 +11,18 @@ import { getTextFromApi } from './apiService.js';
 
 // Pembolehubah untuk menyimpan data base64 bagi imej yang sedang dipaparkan.
 let currentImageBase64 = null;
+let currentMimeType = null;
 
-/**
- * Mengendalikan logik apabila pengguna memilih fail imej.
- * @param {Event} event - Peristiwa 'change' daripada input fail.
- */
 function handleImageSelection(event) {
     const file = event.target.files[0];
-    if (!file) {
-        return; // Keluar jika tiada fail dipilih.
-    }
+    if (!file) return;
 
-    // Panggil fungsi UI untuk memaparkan pratonton.
-    // Apabila selesai, ia akan memanggil balik dengan data base64 imej.
+    const mimeType = file.type; // <- Dapatkan jenis MIME
+    currentMimeType = mimeType; // <- Simpan untuk digunakan kemudian
+
     displayImagePreview(file, (base64) => {
-        currentImageBase64 = base64; // Simpan data imej.
-        updateExtractedText('Imej sedia untuk diekstrak.'); // Kemas kini status UI.
+        currentImageBase64 = base64;
+        updateExtractedText('Imej sedia untuk diekstrak.');
     });
 }
 
@@ -34,25 +30,21 @@ function handleImageSelection(event) {
  * Menguruskan keseluruhan proses pengekstrakan teks, daripada panggilan API hingga kemas kini UI.
  */
 async function handleExtractionProcess() {
-    if (!currentImageBase64) {
+    if (!currentImageBase64 || !currentMimeType) {
         updateExtractedText('Sila muat naik imej dahulu.');
         return;
     }
 
-    setLoadingState(true); // Tunjukkan pemuat.
-    updateExtractedText('Mengekstrak teks...'); // Beri maklum balas segera kepada pengguna.
+    setLoadingState(true);
+    updateExtractedText('Mengekstrak teks...');
 
     try {
-        // Panggil fungsi perkhidmatan API untuk mendapatkan teks.
-        const extractedText = await getTextFromApi(currentImageBase64);
-        // Kemas kini UI dengan teks yang berjaya diekstrak.
+        const extractedText = await getTextFromApi(currentImageBase64, currentMimeType); // <- Tambah argumen kedua
         updateExtractedText(extractedText);
     } catch (error) {
-        // Jika berlaku ralat, paparkannya pada UI.
         console.error('Pengekstrakan gagal:', error);
         updateExtractedText(`Ralat: ${error.message}`);
     } finally {
-        // Pastikan pemuat disembunyikan selepas proses selesai (sama ada berjaya atau gagal).
         setLoadingState(false);
     }
 }
