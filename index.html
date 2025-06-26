@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengekstrak Teks Gambar</title>
+    <title>Pengekstrak Teks Pintar</title>
     
     <!-- Tailwind CSS for utility-first styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,13 +17,13 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
     <div class="container mx-auto p-4 md:p-8 max-w-4xl">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Pengekstrak Teks Gambar</h1>
-            <p class="text-md text-gray-600 dark:text-gray-400 mt-2">Muat naik imej untuk mengekstrak teks di dalamnya menggunakan AI.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Pengekstrak Maklumat Pintar</h1>
+            <p class="text-md text-gray-600 dark:text-gray-400 mt-2">AI akan memahami dan menyusun maklumat dari gambar untuk anda.</p>
         </header>
 
         <main class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Image Upload and Preview Section -->
+                <!-- Image Upload and Preview Section (No changes here) -->
                 <div class="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600">
                     <div id="image-preview-container" class="w-full h-64 flex items-center justify-center relative">
                         <img id="image-preview" src="" alt="Pratonton Imej" class="hidden max-h-full max-w-full rounded-md object-contain">
@@ -41,29 +41,58 @@
                     </button>
                 </div>
 
-                <!-- Extracted Text Section -->
+                <!-- NEW: Structured Data Display Section -->
                 <div class="flex flex-col">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Teks yang Diekstrak:</h2>
-                    <div id="result-container" class="relative flex-grow bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Maklumat Diekstrak:</h2>
+                    <div id="result-container" class="relative flex-grow bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+                        <!-- Loader remains the same -->
                         <div id="loader" class="absolute inset-0 bg-gray-50 dark:bg-gray-700 bg-opacity-80 dark:bg-opacity-80 flex items-center justify-center hidden rounded-lg">
                             <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
-                            <p class="ml-4 text-gray-600 dark:text-gray-300">Mengekstrak teks...</p>
+                            <p class="ml-4 text-gray-600 dark:text-gray-300">Memahami maklumat...</p>
                         </div>
-                        <div id="extracted-text" class="w-full h-full min-h-[200px] whitespace-pre-wrap overflow-y-auto text-gray-700 dark:text-gray-300">Sila muat naik imej untuk memulakan.</div>
-                        <button id="copy-button" class="absolute top-2 right-2 p-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 hidden" title="Salin ke Papan Klip">
-                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                            </svg>
-                        </button>
-                         <div id="copy-success" class="absolute bottom-2 right-2 px-3 py-1 bg-green-500 text-white text-sm rounded-md hidden">
-                            Disalin!
+
+                        <!-- Wrapper for data and placeholder -->
+                        <div id="structured-data-wrapper">
+                            <!-- Initially show a placeholder message -->
+                            <div id="results-placeholder" class="text-center text-gray-500 dark:text-gray-400">
+                                <p>Maklumat yang diekstrak akan dipaparkan di sini.</p>
+                                <p class="text-sm mt-2">Sila muat naik imej untuk memulakan.</p>
+                            </div>
+                            
+                            <!-- This container is hidden initially and shown when data is available -->
+                            <div id="structured-data-container" class="hidden space-y-3">
+                                <div class="grid grid-cols-3 gap-4 items-start">
+                                    <label class="font-medium text-gray-700 dark:text-gray-300 col-span-1 pt-2">Nama</label>
+                                    <p id="data-nama" class="col-span-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm min-h-[40px]">-</p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 items-start">
+                                    <label class="font-medium text-gray-700 dark:text-gray-300 col-span-1 pt-2">No. K.P</label>
+                                    <p id="data-nokp" class="col-span-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm min-h-[40px]">-</p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 items-start">
+                                    <label class="font-medium text-gray-700 dark:text-gray-300 col-span-1 pt-2">Umur</label>
+                                    <p id="data-umur" class="col-span-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm min-h-[40px]">-</p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 items-start">
+                                    <label class="font-medium text-gray-700 dark:text-gray-300 col-span-1 pt-2">Tarikh</label>
+                                    <p id="data-tarikh" class="col-span-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm min-h-[40px]">-</p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 items-start">
+                                    <label class="font-medium text-gray-700 dark:text-gray-300 col-span-1 pt-2">Penyakit</label>
+                                    <p id="data-penyakit" class="col-span-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm min-h-[40px]">-</p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 items-start">
+                                    <label class="font-medium text-gray-700 dark:text-gray-300 col-span-1 pt-2">Rx</label>
+                                    <p id="data-rx" class="whitespace-pre-wrap col-span-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm min-h-[80px]">-</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
              <div class="text-center mt-8">
                  <button id="extract-button" class="w-full md:w-auto px-8 py-3 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none" disabled>
-                    Ekstrak Teks
+                    Faham & Ekstrak
                 </button>
             </div>
         </main>
@@ -73,7 +102,7 @@
         </footer>
     </div>
 
-    <!-- Link to the external JavaScript file -->
+    <!-- PENTING: Link ke fail JavaScript, pastikan type="module" dikekalkan -->
     <script type="module" src="script.js"></script>
 </body>
 </html>

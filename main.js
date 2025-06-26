@@ -1,28 +1,41 @@
 /**
  * main.js
  * Titik masuk utama dan penyelaras untuk aplikasi.
- * Ia mengimport modul UI dan perkhidmatan API, kemudian menetapkan pendengar acara
- * untuk menghubungkan tindakan pengguna dengan logik aplikasi.
+ * Ia kini mengendalikan aliran kerja untuk mendapatkan dan memaparkan data berstruktur.
  */
 
 // Import fungsi dan elemen yang diperlukan dari modul lain.
-import { elements, displayImagePreview, updateExtractedText, copyTextToClipboard, setLoadingState, resetUI } from './ui.js';
-import { getTextFromApi } from './apiService.js';
+import { elements, displayImagePreview, displayStructuredData, setLoadingState, resetUI } from './ui.js';
+import { getStructuredDataFromApi } from './apiService.js';
 
-// Pembolehubah untuk menyimpan data base64 bagi imej yang sedang dipaparkan.
+// Pembolehubah untuk menyimpan data imej yang sedang diproses.
 let currentImageBase64 = null;
 let currentMimeType = null;
 
+/**
+ * Mengendalikan logik apabila pengguna memilih fail imej.
+ * @param {Event} event - Peristiwa 'change' daripada input fail.
+ */
 function handleImageSelection(event) {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        return; // Keluar jika tiada fail dipilih.
+    }
 
-    const mimeType = file.type; // <- Dapatkan jenis MIME
-    currentMimeType = mimeType; // <- Simpan untuk digunakan kemudian
+    // Panggil fungsi UI untuk memaparkan pratonton.
+    // Apabila selesai, ia akan memanggil balik dengan data base64 dan jenis mime imej.
+    displayImagePreview(file, (base64, mimeType) => {
+        currentImageBase64 = base64; // Simpan data base64.
+        currentMimeType = mimeType;   // Simpan jenis mime.
+        
+        // Tetapkan semula paparan data untuk imej baru.
+        resetUI();
+        elements.imagePreview.src = `data:${mimeType};base64,${base64}`;
+        elements.imagePreview.classList.remove('hidden');
+        elements.uploadPlaceholder.classList.add('hidden');
+        elements.extractButton.disabled = false;
+        elements.resultsPlaceholder.textContent = 'Imej sedia untuk diekstrak.';
 
-    displayImagePreview(file, (base64) => {
-        currentImageBase64 = base64;
-        updateExtractedText('Imej sedia untuk diekstrak.');
     });
 }
 
@@ -31,20 +44,28 @@ function handleImageSelection(event) {
  */
 async function handleExtractionProcess() {
     if (!currentImageBase64 || !currentMimeType) {
-        updateExtractedText('Sila muat naik imej dahulu.');
+        alert('Sila muat naik imej dahulu.');
         return;
     }
 
     setLoadingState(true);
-    updateExtractedText('Mengekstrak teks...');
+    // Sembunyikan placeholder dan tunjukkan loader di tengah.
+    elements.resultsPlaceholder.classList.add('hidden');
+    elements.structuredDataContainer.classList.add('hidden');
+
 
     try {
-        const extractedText = await getTextFromApi(currentImageBase64, currentMimeType); // <- Tambah argumen kedua
-        updateExtractedText(extractedText);
+        // Panggil fungsi perkhidmatan API untuk mendapatkan data berstruktur.
+        const structuredData = await getStructuredDataFromApi(currentImageBase64, currentMimeType);
+        // Panggil fungsi UI untuk memaparkan data dalam borang.
+        displayStructuredData(structuredData);
     } catch (error) {
+        // Jika berlaku ralat, paparkannya pada UI.
         console.error('Pengekstrakan gagal:', error);
-        updateExtractedText(`Ralat: ${error.message}`);
+        elements.resultsPlaceholder.classList.remove('hidden');
+        elements.resultsPlaceholder.textContent = `Ralat: ${error.message}`;
     } finally {
+        // Pastikan pemuat disembunyikan selepas proses selesai.
         setLoadingState(false);
     }
 }
@@ -56,7 +77,6 @@ function initializeApp() {
     elements.uploadButton.addEventListener('click', () => elements.imageUpload.click());
     elements.imageUpload.addEventListener('change', handleImageSelection);
     elements.extractButton.addEventListener('click', handleExtractionProcess);
-    elements.copyButton.addEventListener('click', copyTextToClipboard);
 
     // Tetapkan semula UI kepada keadaan asal apabila aplikasi dimuatkan.
     resetUI();
