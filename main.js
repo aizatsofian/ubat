@@ -5,10 +5,12 @@
  */
 
 // Import fungsi dan elemen yang diperlukan dari modul lain.
-// NOTA: Anda perlu pastikan 'ui.js' dieksport elemen 'saveSheetButton' dan 'sheetSaveStatus'.
 import { elements, displayImagePreview, displayStructuredData, setLoadingState, resetUI } from './ui.js';
 import { getStructuredDataFromApi } from './apiService.js';
 import { saveDataToSheet } from './googleSheetService.js';
+
+// --- BARU: Pautan ke Google Sheet anda ---
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1tt0WfvQV3mS4crKk7bKvl-rmNow_m_TzvjlTkg_2RA0/edit';
 
 // Pembolehubah untuk menyimpan data semasa.
 let currentImageBase64 = null;
@@ -50,7 +52,7 @@ async function handleExtractionProcess() {
     setLoadingState(true);
     elements.resultsPlaceholder.classList.add('hidden');
     elements.structuredDataContainer.classList.add('hidden');
-    elements.sheetSaveStatus.textContent = ''; // Kosongkan status simpan.
+    elements.sheetSaveStatus.innerHTML = ''; // Kosongkan status simpan.
 
     try {
         const structuredData = await getStructuredDataFromApi(currentImageBase64, currentMimeType);
@@ -86,8 +88,17 @@ async function handleSaveProcess() {
 
     try {
         await saveDataToSheet(currentStructuredData);
-        statusDisplay.textContent = 'Data berjaya disimpan!';
-        statusDisplay.classList.add('text-green-500');
+        
+        // --- PERUBAHAN DI SINI ---
+        // Daripada hanya memaparkan teks, kita kini memaparkan HTML dengan pautan.
+        const successMessageHTML = `
+            <span class="text-green-500">Data berjaya disimpan!</span> 
+            <a href="${GOOGLE_SHEET_URL}" target="_blank" class="text-blue-500 hover:underline ml-2">
+                Klik Untuk Tengok Data Ubat Disimpan
+            </a>
+        `;
+        statusDisplay.innerHTML = successMessageHTML;
+
     } catch (error) {
         console.error('Proses simpan gagal:', error);
         statusDisplay.textContent = `Gagal menyimpan: ${error.message}`;
@@ -104,7 +115,7 @@ function initializeApp() {
     elements.uploadButton.addEventListener('click', () => elements.imageUpload.click());
     elements.imageUpload.addEventListener('change', handleImageSelection);
     elements.extractButton.addEventListener('click', handleExtractionProcess);
-    elements.saveSheetButton.addEventListener('click', handleSaveProcess); // Tambah pendengar acara baru.
+    elements.saveSheetButton.addEventListener('click', handleSaveProcess);
 
     resetUI();
 }

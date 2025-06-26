@@ -4,7 +4,7 @@
  * Ia kini dikonfigurasikan untuk memaparkan data berstruktur dan mengawal butang simpan.
  */
 
-// Objek untuk memegang semua rujukan elemen DOM, termasuk elemen baru untuk menyimpan.
+// Objek untuk memegang semua rujukan elemen DOM.
 export const elements = {
     imageUpload: document.getElementById('image-upload'),
     uploadButton: document.getElementById('upload-button'),
@@ -25,7 +25,7 @@ export const elements = {
         rx: document.getElementById('data-rx'),
     },
 
-    // Elemen baru untuk fungsi simpan ke Google Sheet
+    // Elemen untuk fungsi simpan ke Google Sheet
     saveSheetButton: document.getElementById('save-sheet-button'),
     sheetSaveStatus: document.getElementById('sheet-save-status'),
 };
@@ -61,7 +61,6 @@ export function displayStructuredData(data) {
 
     for (const key in elements.dataFields) {
         if (elements.dataFields.hasOwnProperty(key)) {
-            // Gunakan `data[key.replace('-', '_')]` jika kunci API berbeza
             elements.dataFields[key].textContent = data[key] || '-';
         }
     }
@@ -97,8 +96,10 @@ export function resetUI() {
     
     elements.extractButton.disabled = true;
 
-    // Sembunyikan dan tetapkan semula elemen simpan.
     elements.saveSheetButton.classList.add('hidden');
-    elements.sheetSaveStatus.textContent = '';
+    
+    // --- PERUBAHAN DI SINI ---
+    // Menggunakan innerHTML = '' untuk memadam sebarang HTML seperti pautan.
+    elements.sheetSaveStatus.innerHTML = ''; 
     elements.sheetSaveStatus.classList.remove('text-green-500', 'text-red-500');
 }
