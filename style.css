@@ -1,0 +1,32 @@
+/* Sets the default font for the entire application to 'Inter' for a clean and modern look. */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Styles for the loading spinner. */
+.loader {
+    /* Sets the color of the top border of the spinner, which is the part that moves. */
+    border-top-color: #3498db; 
+    
+    /* Defines the animation properties: name (spin), duration (1s), timing function (linear), and iteration count (infinite). */
+    -webkit-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
+}
+
+/* Defines the 'spin' animation for WebKit browsers (like Safari). */
+@-webkit-keyframes spin {
+    /* The starting point of the animation: no rotation. */
+    0% { -webkit-transform: rotate(0deg); }
+    
+    /* The ending point of the animation: a full 360-degree rotation. */
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+/* Defines the standard 'spin' animation for all other modern browsers. */
+@keyframes spin {
+    /* The starting point of the animation: no rotation. */
+    0% { transform: rotate(0deg); }
+    
+    /* The ending point of the animation: a full 360-degree rotation. */
+    100% { transform: rotate(360deg); }
+}

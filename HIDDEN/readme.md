@@ -1,0 +1,1 @@
+bina web app untuk extract text dari gambar ()
